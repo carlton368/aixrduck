@@ -1,5 +1,6 @@
 using Fusion;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class PlayerMovement : NetworkBehaviour
 {
@@ -33,6 +34,7 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
+        Debug.Log($"Player position {transform.position}");
         // 스페이스바로 카메라 방향 AddForce
         if (Input.GetKeyDown(KeyCode.Space))
         {

@@ -276,7 +276,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3262049412793409765}
-  - component: {fileID: 1559815161871396964}
   m_Layer: 0
   m_Name: Network Object
   m_TagString: Untagged
@@ -300,24 +299,6 @@ Transform:
   - {fileID: 8881637787230573664}
   m_Father: {fileID: 2503243934576691470}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1559815161871396964
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7682041646839743309}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 0
-  ObjectInterest: 1
-  Flags: 262144
-  NestedObjects: []
-  NetworkedBehaviours: []
-  ForceRemoteRenderTimeframe: 0
 --- !u!1 &8073329251947957978
 GameObject:
   m_ObjectHideFlags: 0

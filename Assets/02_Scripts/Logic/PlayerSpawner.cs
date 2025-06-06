@@ -9,12 +9,6 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
     [Tooltip("플레이어 캐릭터 프리팹 (NetworkObject 포함)")]
     public GameObject PlayerPrefab;
     
-    [Header("스폰 설정")]
-    [Tooltip("Map 기준 로컬 스폰 반경")]
-    public float spawnRadius = 2f;
-    [Tooltip("Map 기준 스폰 높이 오프셋")]
-    public float spawnHeightOffset = 50f;
-    
     [Header("Unity Events")]
     [SerializeField] private UnityEvent<PlayerRef> OnPlayerSpawned;
     [SerializeField] private UnityEvent<Vector3> OnSpawnPositionUsed;
@@ -25,8 +19,6 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
     // 디버그용 추가
     private void Awake()
     {
-        Debug.Log("[PlayerSpawner] Awake() - PlayerSpawner 초기화됨");
-        
         // 프리팹 할당 체크
         if (PlayerPrefab == null)
         {
@@ -46,21 +38,6 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
             {
                 Debug.Log("[PlayerSpawner] PlayerPrefab에 NetworkObject 컴포넌트 확인됨");
             }
-        }
-    }
-
-    private void Start()
-    {
-        Debug.Log("[PlayerSpawner] Start() - PlayerSpawner 시작");
-        
-        // NetworkRunner 상태 체크
-        if (Runner == null)
-        {
-            Debug.LogWarning("[PlayerSpawner] NetworkRunner가 null입니다. 아직 초기화되지 않았을 수 있습니다.");
-        }
-        else
-        {
-            Debug.Log($"[PlayerSpawner] NetworkRunner 상태: IsRunning={Runner.IsRunning}, IsClient={Runner.IsClient}");
         }
     }
 
@@ -128,39 +105,28 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
             Debug.Log($"[PlayerSpawner] 다른 플레이어 참가: {player} (로컬 플레이어 아님)");
         }
     }
-    
-    /// 스폰 위치 계산 - Map 기준 로컬 포지션 사용
+
     private bool TryGetSpawnPosition(PlayerRef player, out Vector3 spawnPosition)
     {
         Debug.Log("[PlayerSpawner] TryGetSpawnPosition() 시작");
-        
+
         // 배치된 Map 찾기
         GameObject placedMap = GetPlacedMap();
+        Debug.Log($"[PlayerSpawner] 배치된 Map 발견: {placedMap.name}");
+
+        // 원하는 로컬 오프셋(로컬 좌표에서의 위치)을 정의
+        // 필요에 따라 Vector3(x, y, z) 형태로 값을 변경하세요.
+        Vector3 localOffset = Vector3.zero;
+
+        // 로컬 포지션을 월드 포지션으로 변환
+        Vector3 finalPosition = placedMap.transform.TransformPoint(localOffset);
+
+        Debug.Log($"[PlayerSpawner] Map 기준 스폰 - Map위치: {placedMap.transform.position}, " +
+                  $"로컬오프셋: {localOffset}, 최종위치: {finalPosition}");
+
+        spawnPosition = finalPosition;
         
-        if (placedMap != null)
-        {
-            Debug.Log($"[PlayerSpawner] 배치된 Map 발견: {placedMap.name}");
-            
-            // Map 기준 랜덤 로컬 포지션 계산
-            Vector3 localSpawnOffset = new Vector3(
-                UnityEngine.Random.Range(-spawnRadius, spawnRadius),
-                spawnHeightOffset,
-                UnityEngine.Random.Range(-spawnRadius, spawnRadius)
-            );
-            
-            // 로컬 포지션을 월드 포지션으로 변환
-            Vector3 finalPosition = placedMap.transform.TransformPoint(localSpawnOffset);
-            
-            Debug.Log($"[PlayerSpawner] Map 기준 스폰 - Map위치: {placedMap.transform.position}, " +
-                     $"로컬오프셋: {localSpawnOffset}, 최종위치: {finalPosition}");
-            
-            spawnPosition = finalPosition;
-            return true;
-        }
-        
-        Debug.LogError("[PlayerSpawner] 배치된 Map을 찾을 수 없습니다! 스폰 불가능!");
-        spawnPosition = Vector3.zero;
-        return false;
+        return true;
     }
     
     /// 배치된 Map GameObject 찾기
