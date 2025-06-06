@@ -9,7 +9,7 @@ PlayerSettings:
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
   defaultScreenOrientation: 4
-  targetDevice: 0
+  targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: wonjinisduck
@@ -171,7 +171,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.wonjinisduck.cuteduck
     Standalone: com.Unity-Technologies.com.unity.template.urp-blank
-    iPhone: com.Unity-Technologies.com.unity.template.urp-blank
+    iPhone: com.wonjinisduck.cuteduck
   buildNumber:
     Standalone: 0
     VisionOS: 0
