@@ -9,17 +9,33 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
     [Tooltip("플레이어 캐릭터 프리팹 (NetworkObject 포함)")]
     public GameObject PlayerPrefab;
     
+    [Header("스폰 설정")]
+    [Tooltip("Map 기준 로컬 스폰 반경")]
+    public float spawnRadius = 2f;
+    [Tooltip("Map 기준 스폰 높이 오프셋")]
+    public float spawnHeightOffset = 15f;
+    
     [Header("Unity Events")]
     [SerializeField] private UnityEvent<PlayerRef> OnPlayerSpawned;
     [SerializeField] private UnityEvent<Vector3> OnSpawnPositionUsed;
 
     // Action 이벤트
     public static System.Action<PlayerRef, Vector3> OnPlayerSpawnedAtPosition;
+    
+    // AR Controller 참조
+    private RaycastWithTrackableTypes arController;
 
     // 디버그용 추가
     private void Awake()
     {
         Debug.Log("[PlayerSpawner] Awake() - PlayerSpawner 초기화됨");
+        
+        // AR Controller 찾기
+        arController = FindObjectOfType<RaycastWithTrackableTypes>();
+        if (arController == null)
+        {
+            Debug.LogWarning("[PlayerSpawner] RaycastWithTrackableTypes를 찾을 수 없습니다!");
+        }
         
         // 프리팹 할당 체크
         if (PlayerPrefab == null)
@@ -95,6 +111,9 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
                 
                 Debug.Log($"[PlayerSpawner] 플레이어 스폰 성공! Player: {player} at {spawnPosition}, NetworkObject: {playerObject?.name}");
                 
+                // Map의 자식으로 설정 (선택사항)
+                SetPlayerAsMapChild(playerObject, spawnPosition);
+                
                 // 이벤트 발생
                 OnPlayerSpawned?.Invoke(player);
                 OnSpawnPositionUsed?.Invoke(spawnPosition);
@@ -114,24 +133,79 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
         }
     }
     
-    /// 스폰 위치 계산
+    /// 스폰 위치 계산 - Map 기준 로컬 포지션 사용
     private Vector3 GetSpawnPosition(PlayerRef player)
     {
         Debug.Log("[PlayerSpawner] GetSpawnPosition() 시작");
         
-        Vector3 basePosition;
+        Vector3 finalPosition;
         
-        basePosition = StaticData.GetCurrentSpawnPosition();
-        Debug.Log($"[PlayerSpawner] AR 위치 사용: {basePosition}");
+        // 먼저 배치된 Map 찾기
+        GameObject placedMap = GetPlacedMap();
         
+        if (placedMap != null)
+        {
+            Debug.Log($"[PlayerSpawner] 배치된 Map 발견: {placedMap.name}");
+            
+            // Map 기준 랜덤 로컬 포지션 계산
+            Vector3 localSpawnOffset = new Vector3(
+                UnityEngine.Random.Range(-spawnRadius, spawnRadius),
+                spawnHeightOffset,
+                UnityEngine.Random.Range(-spawnRadius, spawnRadius)
+            );
+            
+            // 로컬 포지션을 월드 포지션으로 변환
+            finalPosition = placedMap.transform.TransformPoint(localSpawnOffset);
+            
+            Debug.Log($"[PlayerSpawner] Map 기준 스폰 - Map위치: {placedMap.transform.position}, " +
+                     $"로컬오프셋: {localSpawnOffset}, 최종위치: {finalPosition}");
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerSpawner] 배치된 Map을 찾을 수 없습니다. StaticData 위치 사용");
+            finalPosition = StaticData.GetCurrentSpawnPosition();
+        }
         
-        // 최종 스폰 위치
-        Vector3 finalPosition = basePosition;
-        
-        Debug.Log($"[PlayerSpawner] 최종 스폰 위치 계산: base={basePosition},final={finalPosition}");
-        
+        Debug.Log($"[PlayerSpawner] 최종 스폰 위치: {finalPosition}");
         return finalPosition;
     }
+    
+    /// 배치된 Map GameObject 찾기
+    private GameObject GetPlacedMap()
+    {
+        // RaycastWithTrackableTypes에서 배치된 맵 가져오기
+        if (arController != null && arController.HasMapPlaced())
+        {
+            return arController.GetPlacedMap();
+        }
+        
+        Debug.LogWarning("[PlayerSpawner] AR Controller에서 Map을 찾을 수 없습니다!");
+        return null;
+    }
+    
+    /// Player를 Map의 자식으로 설정 (선택사항)
+    private void SetPlayerAsMapChild(NetworkObject playerObject, Vector3 worldSpawnPosition)
+    {
+        if (playerObject == null) return;
+        
+        GameObject placedMap = GetPlacedMap();
+        if (placedMap != null)
+        {
+            // World position을 Map의 local position으로 변환
+            Vector3 localPosition = placedMap.transform.InverseTransformPoint(worldSpawnPosition);
+            
+            // Player를 Map의 자식으로 설정
+            playerObject.transform.SetParent(placedMap.transform);
+            playerObject.transform.localPosition = localPosition;
+            
+            Debug.Log($"[PlayerSpawner] Player를 Map({placedMap.name})의 자식으로 설정 - 로컬위치: {localPosition}");
+        }
+        else
+        {
+            Debug.LogWarning("[PlayerSpawner] Map을 찾을 수 없어 Player를 자식으로 설정하지 못했습니다.");
+        }
+    }
+    
     // 추가 디버그 메서드
     private void Update()
     {
@@ -151,6 +225,10 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
         {
             Debug.Log($"[PlayerSpawner] 현재 플레이어들: LocalPlayer={Runner.LocalPlayer}");
         }
+        
+        // Map 상태도 체크
+        GameObject map = GetPlacedMap();
+        Debug.Log($"[PlayerSpawner] Map 상태: {(map != null ? $"발견됨({map.name})" : "없음")}");
     }
 
     private void OnDestroy()

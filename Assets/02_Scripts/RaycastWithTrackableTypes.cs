@@ -155,5 +155,16 @@ namespace CuteDuckGame
             if (!enabled && indicator != null)
                 indicator.SetActive(false);
         }
+
+        // Map GameObject에 대한 접근자 추가 (다른 클래스에서 사용할 수 있도록)
+        public GameObject GetPlacedMap()
+        {
+            return placededMap;
+        }
+        
+        public bool HasMapPlaced()
+        {
+            return placededMap != null;
+        }
     }
 }
