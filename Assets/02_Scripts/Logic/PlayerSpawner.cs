@@ -8,7 +8,7 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
     [Header("플레이어 설정")] [Tooltip("플레이어 캐릭터 프리팹 (NetworkObject 포함)")]
     public GameObject PlayerPrefab;
 
-    private Vector3 spawnPosAdditionalOffset = new Vector3(0, 5, 0);
+    //private Vector3 spawnPosAdditionalOffset = new Vector3(0, 5, 0);
     
     [Header("Unity Events")] [SerializeField]
     private UnityEvent<PlayerRef> OnPlayerSpawned;
@@ -37,13 +37,11 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
             }
 
             Debug.Log($"[PlayerSpawner] 계산된 스폰 위치: {spawnPosition}");
-            
-            
 
 
             // 플레이어 스폰
             NetworkObject playerObject = Runner.Spawn(PlayerPrefab,
-                spawnPosition+spawnPosAdditionalOffset,
+                spawnPosition,
                 Quaternion.identity,
                 player); // InputAuthority 설정
 
